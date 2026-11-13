@@ -273,6 +273,9 @@ jobs:
             ARCH=arm64 \
             CC="ccache clang" \
             CLANG_TRIPLE=aarch64-linux-gnu- \
+            CLANG_TARGET_ARM32="--target=arm-linux-gnueabi" \
+            CLANG_GCC32_TC="--gcc-toolchain=/usr" \
+            CLANG_PREFIX32="--prefix=/usr/bin/" \
             CROSS_COMPILE=aarch64-linux-gnu- \
             CROSS_COMPILE_ARM32=arm-linux-gnueabi-
 
