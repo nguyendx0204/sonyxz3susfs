@@ -1,8 +1,3 @@
-
-
-
-Biểu tượng YML
-build
 name: Build KernelSU Next + SUSFS (Xperia XZ3 - akatsuki)
 
 on:
