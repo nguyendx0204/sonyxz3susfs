@@ -1,0 +1,38 @@
+name: Build Xperia XZ3 boot image
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "README.md"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 180
+    steps:
+      - name: Check out build scripts and patches
+        uses: actions/checkout@v4
+
+      - name: Install cross-build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bc bison flex gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi \
+            libelf-dev libncurses-dev libssl-dev make python3
+
+      - name: Build kernel and boot image
+        run: bash scripts/build.sh
+
+      - name: Upload flashable boot image
+        uses: actions/upload-artifact@v4
+        with:
+          name: xz3-ksunext-susfs-boot
+          path: |
+            dist/boot.img
+            dist/Image.gz-dtb
+            dist/*-commit.txt
+          if-no-files-found: error

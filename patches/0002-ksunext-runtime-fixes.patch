@@ -1,0 +1,45 @@
+diff --git a/kernel/runtime/ksud_integration.c b/kernel/runtime/ksud_integration.c
+index b05cc998..3f1b1d23 100644
+--- a/kernel/runtime/ksud_integration.c
++++ b/kernel/runtime/ksud_integration.c
+@@ -43,9 +43,12 @@ static const char KERNEL_SU_RC[] =
+ 	"\n"
+ 
+ 	"on post-fs-data\n"
++	"    write /dev/kmsg KernelSU_RC_POST_FS_DATA_REACHED\n"
+ 	"    start logd\n"
+ 	// We should wait for the post-fs-data finish
+ 	"    exec u:r:" KERNEL_SU_DOMAIN ":s0 root -- " KSUD_PATH " post-fs-data\n"
++	"    write /dev/kmsg KernelSU_RC_SERVICES_REACHED\n"
++	"    exec u:r:" KERNEL_SU_DOMAIN ":s0 root -- " KSUD_PATH " services\n"
+ 	"\n"
+ 
+ 	"on nonencrypted\n"
+@@ -57,6 +60,7 @@ static const char KERNEL_SU_RC[] =
+ 	"\n"
+ 
+ 	"on property:sys.boot_completed=1\n"
++	"    write /dev/kmsg KernelSU_RC_BOOT_COMPLETED_REACHED\n"
+ 	"    exec u:r:" KERNEL_SU_DOMAIN ":s0 root -- " KSUD_PATH " boot-completed\n"
+ 	"\n"
+ 
+@@ -426,11 +430,14 @@ static bool is_init_rc(struct file *fp)
+         return false;
+     }
+ 
+-    if (!!strcmp(dpath, "/init.rc") && !!strcmp(dpath, "/system/etc/init/hw/init.rc")) {
+-        return false;
+-    }
+-
+-    return true;
++    /*
++     * system-as-root and bind-mounted layouts can expose the same init.rc
++     * through a different absolute path.  At this point we already require
++     * the init process and an init.rc regular file, so accept the resolved
++     * path instead of rejecting it solely because d_path() returned an alias.
++     */
++    pr_info("vfs_read: init.rc candidate path: %s\n", dpath);
++    return check_init_path(dpath);
+ }
+ 
+ static void ksu_apply_init_rc_proxy(struct file *file)
